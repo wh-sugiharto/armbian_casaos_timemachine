@@ -4,11 +4,6 @@
 
 This repository provides a script to set up a Time Machine server on an Armbian system using Netatalk and Avahi-daemon.
 
-
-## Preparation
-
-
-
 ## Preparation
 
 ```bash
