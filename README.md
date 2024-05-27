@@ -1,6 +1,9 @@
-# Unduh dan jalankan skrip menggunakan curl
+# Preparation
+1. Pastikan data yang ingin di share sudah di mount
+2. Pastikan directory /DATA sudah di share
+
+# Installation 
+
 bash <(curl -s https://raw.githubusercontent.com/wh-sugiharto/armbian_casaos_timemachine/main/setup_timemachine_server.sh)
-
-
-# Unduh dan jalankan skrip menggunakan wget
+or
 wget -O - https://raw.githubusercontent.com/wh-sugiharto/armbian_casaos_timemachine/main/setup_timemachine_server.sh | bash
