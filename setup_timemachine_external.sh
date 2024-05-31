@@ -45,8 +45,8 @@ sudo apt install -y netatalk avahi-daemon
 
 # Membuat direktori Time Machine backup
 sudo mkdir -p /mnt/external/timemachine
-sudo chown -R $USER:$USER /mnt/external/timemachine
-sudo chmod -R 755 /mnt/external/timemachine
+#sudo chown -R $USER:$USER /mnt/external/timemachine
+#sudo chmod -R 755 /mnt/external/timemachine
 
 # Membuat user baru untuk Time Machine (ganti 'yourusername' dan 'yourpassword')
 # sudo adduser --gecos "" timemachineuser --disabled-password
