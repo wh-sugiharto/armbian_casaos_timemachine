@@ -40,17 +40,22 @@ else
 fi
 
 # Update package list dan install dependencies
-#sudo apt update
-#sudo apt install -y netatalk avahi-daemon
+sudo apt update
+sudo apt install -y netatalk avahi-daemon
 
 # Membuat direktori Time Machine backup
 sudo mkdir -p /mnt/external/timemachine
 sudo chown -R $USER:$USER /mnt/external/timemachine
 sudo chmod -R 755 /mnt/external/timemachine
 
-# Menggunakan username dan password user saat ini
-username=$(whoami)
-password=$(sudo grep $username /etc/shadow | cut -d: -f2)
+# Meminta input username dan password
+read -p "Masukkan username untuk Time Machine: " username
+read -sp "Masukkan password untuk $username: " password
+echo
+
+# Membuat user baru dengan username dan password yang dimasukkan
+sudo adduser --gecos "" $username --disabled-password
+echo "$username:$password" | sudo chpasswd
 
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
