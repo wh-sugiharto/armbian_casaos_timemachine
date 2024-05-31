@@ -1,18 +1,16 @@
 #!/bin/bash
 
-# Fungsi untuk menemukan partisi penyimpanan terbesar yang ter-mount di /media/devmon/*
-find_largest_partition() {
-    lsblk -b -o NAME,SIZE,MOUNTPOINT | grep '/media/devmon' | sort -k2 -nr | head -n 1 | awk '{print $1}'
-}
+# Mendapatkan semua partisi yang ter-mount di /media/devmon/*
+partitions=($(lsblk -o NAME,MOUNTPOINT | grep '/media/devmon' | awk '{print $1}'))
 
-# Mendapatkan partisi terbesar yang ter-mount di /media/devmon
-largest_partition=$(find_largest_partition)
-
-if [ -z "$largest_partition" ]; then
+if [ ${#partitions[@]} -eq 0 ]; then
     echo "Tidak ada partisi yang ter-mount di /media/devmon."
     exit 1
 else
-    echo "Partisi terbesar yang ditemukan: /dev/$largest_partition"
+    echo "Partisi yang ter-mount di /media/devmon:"
+    for partition in "${partitions[@]}"; do
+        echo "/dev/$partition"
+    done
 fi
 
 # Fungsi untuk mount partisi NTFS ke /mnt/external
@@ -36,10 +34,11 @@ setup_drive() {
     echo "/dev/$partition $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
 }
 
-# Setup drive
-echo "Mengatur partisi /dev/$largest_partition"
-setup_drive $largest_partition
-echo "Partisi /dev/$largest_partition telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
+# Menggunakan partisi pertama yang ditemukan
+partition_to_use=${partitions[0]}
+echo "Menggunakan partisi /dev/$partition_to_use"
+setup_drive $partition_to_use
+echo "Partisi /dev/$partition_to_use telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 
 # Menampilkan kapasitas dari /mnt/external
 df -h /mnt/external
