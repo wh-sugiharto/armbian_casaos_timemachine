@@ -1,41 +1,41 @@
 #!/bin/bash
 
-# Fungsi untuk menemukan perangkat penyimpanan terbesar
-find_largest_drive() {
-    lsblk -b -dn -o NAME,SIZE | sort -k2 -nr | head -n 1 | awk '{print $1}'
+# Fungsi untuk menemukan partisi penyimpanan terbesar
+find_largest_partition() {
+    lsblk -b -dn -o NAME,SIZE,FSTYPE | grep ntfs | sort -k2 -nr | head -n 1 | awk '{print $1}'
 }
 
-# Fungsi untuk unmount drive jika sudah ter-mount dan kemudian mount ke /mnt/external
-setup_drive() {
-    local drive=$1
+# Fungsi untuk unmount partisi jika sudah ter-mount dan kemudian mount ke /mnt/external
+setup_partition() {
+    local partition=$1
     local mount_point="/mnt/external"
 
-    # Mengecek apakah drive sudah ter-mount, jika ya, unmount
-    mount | grep /dev/$drive > /dev/null
+    # Mengecek apakah partisi sudah ter-mount, jika ya, unmount
+    mount | grep /dev/$partition > /dev/null
     if [ $? -eq 0 ]; then
-        sudo umount /dev/$drive
+        sudo umount /dev/$partition
     fi
 
     # Membuat direktori mount jika belum ada
     sudo mkdir -p $mount_point
 
-    # Melakukan mount drive NTFS
-    sudo mount -t ntfs-3g /dev/$drive $mount_point
+    # Melakukan mount partisi NTFS
+    sudo mount -t ntfs-3g /dev/$partition $mount_point
 
     # Menambahkan entri ke /etc/fstab untuk mount permanen
-    echo "/dev/$drive $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
+    echo "/dev/$partition $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
 }
 
-# Mencari perangkat penyimpanan terbesar
-largest_drive=$(find_largest_drive)
+# Mencari partisi penyimpanan NTFS terbesar
+largest_partition=$(find_largest_partition)
 
-if [ -z "$largest_drive" ]; then
-    echo "Tidak ditemukan perangkat penyimpanan."
+if [ -z "$largest_partition" ]; then
+    echo "Tidak ditemukan partisi NTFS."
     exit 1
 else
-    echo "Ditemukan perangkat terbesar: /dev/$largest_drive"
-    setup_drive $largest_drive
-    echo "Perangkat /dev/$largest_drive telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
+    echo "Ditemukan partisi NTFS terbesar: /dev/$largest_partition"
+    setup_partition $largest_partition
+    echo "Partisi /dev/$largest_partition telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 fi
 
 # Menampilkan kapasitas dari /mnt/external
