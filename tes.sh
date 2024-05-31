@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Cari partisi sda terbesar
-largest_partition=$(lsblk -nr -o NAME,SIZE | grep '^sda' | sort -k2 -rh | head -n 1 | awk '{print $1}')
+largest_partition=$(lsblk -nr -o NAME,SIZE | grep '^sda[0-9]' | sort -k2 -rh | head -n 1 | awk '{print $1}')
 
 if [ -z "$largest_partition" ]; then
   echo "Tidak ada partisi sda yang ditemukan."
@@ -22,4 +22,3 @@ sudo mkfs.ntfs -Q -L external "/dev/$largest_partition"
 # Verifikasi
 echo "Verifying the format"
 sudo blkid "/dev/$largest_partition"
-
