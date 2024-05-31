@@ -1,15 +1,11 @@
 #!/bin/bash
 
-# Fungsi untuk menemukan perangkat penyimpanan baru
-find_new_drive() {
-    for drive in /dev/sd*; do
-        if [ ! -e "${drive}1" ]; then
-            echo "$drive"
-        fi
-    done
+# Fungsi untuk menampilkan daftar perangkat penyimpanan
+list_drives() {
+    lsblk -o NAME,SIZE,LABEL,FSTYPE,MOUNTPOINT -dn | grep -E "^sd"
 }
 
-# Fungsi untuk membuat filesystem dan mount
+# Fungsi untuk mount drive NTFS
 setup_drive() {
     local drive=$1
     local mount_point="/mnt/external"
@@ -17,40 +13,47 @@ setup_drive() {
     # Membuat direktori mount jika belum ada
     sudo mkdir -p $mount_point
 
-    # Membuat filesystem ext4 pada drive
-    sudo mkfs.ext4 $drive
+    # Melakukan mount drive NTFS
+    sudo mount -t ntfs-3g /dev/$drive $mount_point
 
     # Menambahkan entri ke /etc/fstab untuk mount permanen
-    echo "$drive $mount_point ext4 defaults 0 0" | sudo tee -a /etc/fstab
-
-    # Melakukan mount drive
-    sudo mount -a
+    echo "/dev/$drive $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
 }
 
-# Mencari perangkat penyimpanan baru
-new_drive=$(find_new_drive)
+# Menampilkan daftar perangkat penyimpanan
+echo "Daftar perangkat penyimpanan:"
+list_drives
 
-if [ -z "$new_drive" ]; then
-    echo "Tidak ditemukan perangkat penyimpanan baru."
+# Meminta pengguna memilih perangkat
+echo "Pilih perangkat penyimpanan yang ingin Anda gunakan (masukkan nomor):"
+read -p "Nomor perangkat: " device_number
+
+# Memvalidasi input pengguna
+if ! [[ "$device_number" =~ ^[0-9]+$ ]]; then
+    echo "Input tidak valid. Harap masukkan nomor perangkat yang benar."
+    exit 1
+fi
+
+# Menemukan nama perangkat berdasarkan nomor yang dipilih
+drive_name=$(list_drives | sed -n "${device_number}p" | awk '{print $1}')
+
+if [ -z "$drive_name" ]; then
+    echo "Perangkat tidak ditemukan. Harap pilih nomor perangkat yang benar."
     exit 1
 else
-    echo "Ditemukan perangkat baru: $new_drive"
-    setup_drive $new_drive
-    echo "Perangkat $new_drive telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
+    echo "Perangkat yang dipilih: /dev/$drive_name"
+    setup_drive $drive_name
+    echo "Perangkat /dev/$drive_name telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 fi
 
 # Update package list dan install dependencies
 sudo apt update
-sudo apt install -y netatalk avahi-daemon
+sudo apt install -y netatalk avahi-daemon ntfs-3g
 
 # Membuat direktori Time Machine backup
 sudo mkdir -p /mnt/external/timemachine
 sudo chown -R $USER:$USER /mnt/external/timemachine
-sudo chmod -R 755 /mnt/external/timemachine
-
-# Membuat user baru untuk Time Machine (ganti 'yourusername' dan 'yourpassword')
-# sudo adduser --gecos "" timemachineuser --disabled-password
-# echo "timemachineuser:yourpassword" | sudo chpasswd
+sudo chmod -R 775 /mnt/external/timemachine
 
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
