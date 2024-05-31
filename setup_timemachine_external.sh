@@ -48,14 +48,9 @@ sudo mkdir -p /mnt/external/timemachine
 sudo chown -R $USER:$USER /mnt/external/timemachine
 sudo chmod -R 755 /mnt/external/timemachine
 
-# Meminta input username dan password
-read -p "Masukkan username untuk Time Machine: " username
-read -sp "Masukkan password untuk $username: " password
-echo
-
-# Membuat user baru dengan username dan password yang dimasukkan
-sudo adduser --gecos "" $username --disabled-password
-echo "$username:$password" | sudo chpasswd
+# Membuat user baru untuk Time Machine (ganti 'yourusername' dan 'yourpassword')
+# sudo adduser --gecos "" timemachineuser --disabled-password
+# echo "timemachineuser:yourpassword" | sudo chpasswd
 
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
@@ -65,7 +60,6 @@ log file = /var/log/netatalk.log
 [TimeMachine]
 path = /mnt/external/timemachine
 time machine = yes
-valid users = $username
 EOL
 
 # Membuat file konfigurasi Avahi untuk AFP
