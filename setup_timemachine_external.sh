@@ -1,49 +1,32 @@
 #!/bin/bash
 
-# Mendapatkan semua partisi yang ter-mount di /media/devmon/*
-partitions=($(lsblk -o NAME,MOUNTPOINT | grep '/media/devmon' | awk '{print $1}'))
-
-if [ ${#partitions[@]} -eq 0 ]; then
-    echo "Tidak ada partisi yang ter-mount di /media/devmon."
-    exit 1
-else
-    echo "Partisi yang ter-mount di /media/devmon:"
-    for partition in "${partitions[@]}"; do
-        echo "/dev/$partition"
-    done
-fi
-
-# Menggunakan partisi pertama yang ditemukan
-partition_to_use=${partitions[0]}
-mount_point=$(lsblk -o MOUNTPOINT | grep "/media/devmon")
-
-if [ -z "$mount_point" ]; then
-    echo "Tidak ada mount point yang ditemukan untuk partisi /dev/$partition_to_use."
-    exit 1
-else
-    echo "Menggunakan partisi /dev/$partition_to_use yang ter-mount di $mount_point"
-fi
-
-# Update package list dan install dependencies
+# Update package list and install dependencies
 sudo apt update
-sudo apt install -y netatalk avahi-daemon ntfs-3g
+sudo apt install -y netatalk avahi-daemon
 
-# Membuat direktori Time Machine backup
-sudo mkdir -p $mount_point/timemachine
-sudo chown -R $USER:$USER $mount_point/timemachine
-sudo chmod -R 775 $mount_point/timemachine
+# Create the Time Machine backup directory
+sudo umount /dev/sda2
+sudo mkdir -p /ext/timemachine
+sudo mount /dev/sda2 /mnt/external
+sudo chown -R $USER:$USER /mnt/external
+sudo chmod -R 755 /mnt/external
 
-# Konfigurasi Netatalk
+
+# Create a new user for Time Machine (replace 'yourusername' and 'yourpassword')
+#sudo adduser --gecos "" timemachineuser --disabled-password
+#echo "timemachineuser:password" | sudo chpasswd
+
+# Configure Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
 [Global]
 log file = /var/log/netatalk.log
 
 [TimeMachine]
-path = $mount_point/timemachine
+path = /mnt/external
 time machine = yes
 EOL
 
-# Membuat file konfigurasi Avahi untuk AFP
+# Create Avahi configuration file for AFP
 sudo tee /etc/avahi/services/afpd.service > /dev/null <<EOL
 <?xml version="1.0" standalone='no'?><!--*-nxml-*-->
 <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
@@ -61,9 +44,9 @@ sudo tee /etc/avahi/services/afpd.service > /dev/null <<EOL
 </service-group>
 EOL
 
-# Restart layanan Netatalk dan Avahi
+# Restart Netatalk and Avahi services
 sudo systemctl restart netatalk
 sudo systemctl restart avahi-daemon
 
-echo "Setup Time Machine HomeServer selesai dengan sukses."
-echo "Direktori Time Machine ada di $mount_point/timemachine"
+echo "Time Machine HomeServer setup completed successfully."
+echo "Time Machine Directory is /DATA"
