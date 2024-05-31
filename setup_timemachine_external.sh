@@ -6,7 +6,7 @@ sudo apt install -y netatalk avahi-daemon
 
 # Create the Time Machine backup directory
 sudo umount /dev/sda2
-sudo mkdir -p /ext/timemachine
+sudo mkdir -p /mnt/external
 sudo mount /dev/sda2 /mnt/external
 sudo chown -R $USER:$USER /mnt/external
 sudo chmod -R 755 /mnt/external
