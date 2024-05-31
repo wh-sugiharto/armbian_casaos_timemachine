@@ -1,24 +1,40 @@
 #!/bin/bash
 
-# Cari partisi sda terbesar
-largest_partition=$(lsblk -nr -o NAME,SIZE | grep '^sda[0-9]' | sort -k2 -rh | head -n 1 | awk '{print $1}')
+# Menampilkan storage yang ada
+echo "Menampilkan storage yang ada:"
+lsblk
+echo
 
-if [ -z "$largest_partition" ]; then
-  echo "Tidak ada partisi sda yang ditemukan."
-  exit 1
+# Meminta input dari pengguna untuk partisi yang akan diunmount dan diformat
+read -p "Masukkan partisi yang ingin di-unmount dan diformat (contoh: sda2): " PARTITION
+PARTITION="/dev/$PARTITION"
+
+# Memeriksa apakah partisi ter-mount
+MOUNT_POINT=$(mount | grep "$PARTITION" | awk '{print $3}')
+
+if [ -z "$MOUNT_POINT" ]; then
+  echo "Partisi $PARTITION tidak ter-mount."
+else
+  # Unmount partisi
+  echo "Unmounting $PARTITION dari $MOUNT_POINT"
+  sudo umount "$PARTITION"
+  if [ $? -ne 0 ]; then
+    echo "Gagal unmount $PARTITION."
+    exit 1
+  fi
 fi
 
-# Unmount partisi jika ter-mount
-mount_point=$(mount | grep "/dev/$largest_partition" | awk '{print $3}')
-if [ -n "$mount_point" ]; then
-  echo "Unmounting /dev/$largest_partition from $mount_point"
-  sudo umount "/dev/$largest_partition"
+# Format partisi dengan NTFS dan label "external" menggunakan quick format
+echo "Memformat $PARTITION dengan NTFS dan label 'external' menggunakan quick format."
+sudo mkfs.ntfs -Q -L external "$PARTITION"
+if [ $? -ne 0 ]; then
+    echo "Gagal memformat $PARTITION."
+    exit 1
 fi
 
-# Format partisi dengan NTFS quick format dan beri label "external"
-echo "Formatting /dev/$largest_partition with NTFS and labeling it 'external'"
-sudo mkfs.ntfs -Q -L external "/dev/$largest_partition"
+# Verifikasi hasil format
+echo "Verifikasi hasil format:"
+sudo blkid "$PARTITION"
+echo
 
-# Verifikasi
-echo "Verifying the format"
-sudo blkid "/dev/$largest_partition"
+echo "Proses selesai."
