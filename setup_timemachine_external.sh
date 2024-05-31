@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Fungsi untuk menampilkan daftar perangkat penyimpanan
-list_drives() {
-    lsblk -o NAME,SIZE,LABEL,FSTYPE,MOUNTPOINT -dn | grep -E "^sd"
+# Fungsi untuk menemukan perangkat penyimpanan terbesar
+find_largest_drive() {
+    lsblk -b -dn -o NAME,SIZE | sort -k2 -nr | head -n 1 | awk '{print $1}'
 }
 
 # Fungsi untuk mount drive NTFS
@@ -20,30 +20,16 @@ setup_drive() {
     echo "/dev/$drive $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
 }
 
-# Menampilkan daftar perangkat penyimpanan
-echo "Daftar perangkat penyimpanan:"
-list_drives | nl -v 0
+# Mencari perangkat penyimpanan terbesar
+largest_drive=$(find_largest_drive)
 
-# Meminta pengguna memilih perangkat
-echo "Pilih perangkat penyimpanan yang ingin Anda gunakan (masukkan nomor):"
-read -p "Nomor perangkat: " device_number
-
-# Memvalidasi input pengguna
-if ! [[ "$device_number" =~ ^[0-9]+$ ]]; then
-    echo "Input tidak valid. Harap masukkan nomor perangkat yang benar."
-    exit 1
-fi
-
-# Menemukan nama perangkat berdasarkan nomor yang dipilih
-drive_name=$(list_drives | sed -n "$((device_number + 1))p" | awk '{print $1}')
-
-if [ -z "$drive_name" ]; then
-    echo "Perangkat tidak ditemukan. Harap pilih nomor perangkat yang benar."
+if [ -z "$largest_drive" ]; then
+    echo "Tidak ditemukan perangkat penyimpanan."
     exit 1
 else
-    echo "Perangkat yang dipilih: /dev/$drive_name"
-    setup_drive $drive_name
-    echo "Perangkat /dev/$drive_name telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
+    echo "Ditemukan perangkat terbesar: /dev/$largest_drive"
+    setup_drive $largest_drive
+    echo "Perangkat /dev/$largest_drive telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 fi
 
 # Update package list dan install dependencies
