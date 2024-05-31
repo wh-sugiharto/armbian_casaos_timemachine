@@ -43,13 +43,22 @@ fi
 sudo apt update
 sudo apt install -y netatalk avahi-daemon
 
+# Membuat direktori Time Machine backup
+sudo mkdir -p /mnt/external/timemachine
+sudo chown -R $USER:$USER /mnt/external/timemachine
+sudo chmod -R 755 /mnt/external/timemachine
+
+# Membuat user baru 'amlogic' tanpa password
+sudo adduser --gecos "" amlogic --disabled-password
+sudo usermod -p '*' amlogic
+
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
 [Global]
 log file = /var/log/netatalk.log
 
 [TimeMachine]
-path = /mnt/external
+path = /mnt/external/timemachine
 time machine = yes
 EOL
 
@@ -76,4 +85,4 @@ sudo systemctl restart netatalk
 sudo systemctl restart avahi-daemon
 
 echo "Setup Time Machine HomeServer selesai dengan sukses."
-echo "Direktori Time Machine ada di /mnt/external/"
+echo "Direktori Time Machine ada di /mnt/external/timemachine"
