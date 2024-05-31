@@ -5,11 +5,11 @@ sudo apt update
 sudo apt install -y netatalk avahi-daemon
 
 # Create the Time Machine backup directory
-sudo umount /dev/sda2
-sudo mkdir -p /mnt/external
-sudo mount /dev/sda2 /mnt/external
-sudo chown -R $USER:$USER /mnt/external
-sudo chmod -R 755 /mnt/external
+# sudo umount /dev/sda2
+#sudo mkdir -p /mnt/external 
+#sudo mount /dev/sda2 /mnt/external
+sudo chown -R $USER:$USER /media/devmon/external
+sudo chmod -R 755 /media/devmon/external
 
 
 # Create a new user for Time Machine (replace 'yourusername' and 'yourpassword')
@@ -22,7 +22,7 @@ sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
 log file = /var/log/netatalk.log
 
 [TimeMachine]
-path = /mnt/external
+path = /media/devmon/external
 time machine = yes
 EOL
 
