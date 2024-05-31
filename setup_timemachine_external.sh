@@ -40,17 +40,17 @@ else
 fi
 
 # Update package list dan install dependencies
-# sudo apt update
-# sudo apt install -y netatalk avahi-daemon
+#sudo apt update
+#sudo apt install -y netatalk avahi-daemon
 
 # Membuat direktori Time Machine backup
 sudo mkdir -p /mnt/external/timemachine
 sudo chown -R $USER:$USER /mnt/external/timemachine
 sudo chmod -R 755 /mnt/external/timemachine
 
-# Membuat user baru 'amlogic' tanpa password
-sudo adduser --gecos "" amlogic --disabled-password
-sudo usermod -p '*' amlogic
+# Menggunakan username dan password user saat ini
+username=$(whoami)
+password=$(sudo grep $username /etc/shadow | cut -d: -f2)
 
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
@@ -60,6 +60,7 @@ log file = /var/log/netatalk.log
 [TimeMachine]
 path = /mnt/external/timemachine
 time machine = yes
+valid users = $username
 EOL
 
 # Membuat file konfigurasi Avahi untuk AFP
