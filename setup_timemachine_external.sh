@@ -40,8 +40,8 @@ else
 fi
 
 # Update package list dan install dependencies
-sudo apt update
-sudo apt install -y netatalk avahi-daemon
+# sudo apt update
+# sudo apt install -y netatalk avahi-daemon
 
 # Membuat direktori Time Machine backup
 sudo mkdir -p /mnt/external/timemachine
