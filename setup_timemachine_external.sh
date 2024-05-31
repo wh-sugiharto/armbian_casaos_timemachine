@@ -5,10 +5,16 @@ find_largest_drive() {
     lsblk -b -dn -o NAME,SIZE | sort -k2 -nr | head -n 1 | awk '{print $1}'
 }
 
-# Fungsi untuk mount drive NTFS
+# Fungsi untuk unmount drive jika sudah ter-mount dan kemudian mount ke /mnt/external
 setup_drive() {
     local drive=$1
     local mount_point="/mnt/external"
+
+    # Mengecek apakah drive sudah ter-mount, jika ya, unmount
+    mount | grep /dev/$drive > /dev/null
+    if [ $? -eq 0 ]; then
+        sudo umount /dev/$drive
+    fi
 
     # Membuat direktori mount jika belum ada
     sudo mkdir -p $mount_point
@@ -31,6 +37,9 @@ else
     setup_drive $largest_drive
     echo "Perangkat /dev/$largest_drive telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 fi
+
+# Menampilkan kapasitas dari /mnt/external
+df -h /mnt/external
 
 # Update package list dan install dependencies
 sudo apt update
