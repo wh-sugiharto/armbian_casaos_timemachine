@@ -1,12 +1,30 @@
 #!/bin/bash
 
-# Fungsi untuk menemukan partisi penyimpanan terbesar
-find_largest_partition() {
-    lsblk -b -dn -o NAME,SIZE,FSTYPE | grep ntfs | sort -k2 -nr | head -n 1 | awk '{print $1}'
-}
+# Mendapatkan semua partisi yang ter-mount di /media/devmon/*
+partitions=($(lsblk -o NAME,MOUNTPOINT | grep '/media/devmon' | awk '{print $1}'))
 
-# Fungsi untuk unmount partisi jika sudah ter-mount dan kemudian mount ke /mnt/external
-setup_partition() {
+if [ ${#partitions[@]} -eq 0 ]; then
+    echo "Tidak ada partisi yang ter-mount di /media/devmon."
+    exit 1
+else
+    echo "Partisi yang ter-mount di /media/devmon:"
+    for partition in "${partitions[@]}"; do
+        echo "/dev/$partition"
+    done
+fi
+
+# Memilih partisi terbesar
+largest_partition=$(lsblk -b -dn -o NAME,SIZE,MOUNTPOINT | grep '/media/devmon' | sort -k2 -nr | head -n 1 | awk '{print $1}')
+
+if [ -z "$largest_partition" ]; then
+    echo "Tidak ada partisi NTFS yang ditemukan."
+    exit 1
+else
+    echo "Partisi NTFS terbesar yang ditemukan: /dev/$largest_partition"
+fi
+
+# Fungsi untuk mount partisi NTFS ke /mnt/external
+setup_drive() {
     local partition=$1
     local mount_point="/mnt/external"
 
@@ -26,17 +44,10 @@ setup_partition() {
     echo "/dev/$partition $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
 }
 
-# Mencari partisi penyimpanan NTFS terbesar
-largest_partition=$(find_largest_partition)
-
-if [ -z "$largest_partition" ]; then
-    echo "Tidak ditemukan partisi NTFS."
-    exit 1
-else
-    echo "Ditemukan partisi NTFS terbesar: /dev/$largest_partition"
-    setup_partition $largest_partition
-    echo "Partisi /dev/$largest_partition telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
-fi
+# Setup drive
+echo "Mengatur partisi /dev/$largest_partition"
+setup_drive $largest_partition
+echo "Partisi /dev/$largest_partition telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
 
 # Menampilkan kapasitas dari /mnt/external
 df -h /mnt/external
