@@ -8,8 +8,9 @@ sudo apt install -y netatalk avahi-daemon
 # sudo umount /dev/sda2
 #sudo mkdir -p /mnt/external 
 #sudo mount /dev/sda2 /mnt/external
-sudo chown -R $USER:$USER /media/devmon/external
-sudo chmod -R 755 /media/devmon/external
+sudo mkdir -p /media/devmon/external/external
+sudo chown -R $USER:$USER /media/devmon/external/external
+sudo chmod -R 755 /media/devmon/external/external
 
 
 # Create a new user for Time Machine (replace 'yourusername' and 'yourpassword')
@@ -22,7 +23,7 @@ sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
 log file = /var/log/netatalk.log
 
 [TimeMachine]
-path = /media/devmon/external
+path = /media/devmon/external/external
 time machine = yes
 EOL
 
@@ -49,4 +50,3 @@ sudo systemctl restart netatalk
 sudo systemctl restart avahi-daemon
 
 echo "Time Machine HomeServer setup completed successfully."
-echo "Time Machine Directory is /DATA"
