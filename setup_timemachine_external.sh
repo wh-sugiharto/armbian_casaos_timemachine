@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Mendapatkan semua partisi yang ter-mount di /media/devmon/*
-partitions=($(lsblk -o NAME,MOUNTPOINT | grep '/media/devmon' | awk '{print $1}'))
+partitions=($(lsblk -b -o NAME,MOUNTPOINT | grep '/media/devmon' | awk '{print $1}'))
 
 if [ ${#partitions[@]} -eq 0 ]; then
     echo "Tidak ada partisi yang ter-mount di /media/devmon."
@@ -13,14 +13,14 @@ else
     done
 fi
 
-# Memilih partisi terbesar
+# Memilih partisi terbesar yang ter-mount di /media/devmon/*
 largest_partition=$(lsblk -b -dn -o NAME,SIZE,MOUNTPOINT | grep '/media/devmon' | sort -k2 -nr | head -n 1 | awk '{print $1}')
 
 if [ -z "$largest_partition" ]; then
-    echo "Tidak ada partisi NTFS yang ditemukan."
+    echo "Tidak ada partisi yang ter-mount di /media/devmon."
     exit 1
 else
-    echo "Partisi NTFS terbesar yang ditemukan: /dev/$largest_partition"
+    echo "Partisi terbesar yang ditemukan: /dev/$largest_partition"
 fi
 
 # Fungsi untuk mount partisi NTFS ke /mnt/external
