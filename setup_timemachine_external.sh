@@ -22,7 +22,7 @@ setup_drive() {
 
 # Menampilkan daftar perangkat penyimpanan
 echo "Daftar perangkat penyimpanan:"
-list_drives
+list_drives | nl -v 0
 
 # Meminta pengguna memilih perangkat
 echo "Pilih perangkat penyimpanan yang ingin Anda gunakan (masukkan nomor):"
@@ -35,7 +35,7 @@ if ! [[ "$device_number" =~ ^[0-9]+$ ]]; then
 fi
 
 # Menemukan nama perangkat berdasarkan nomor yang dipilih
-drive_name=$(list_drives | sed -n "${device_number}p" | awk '{print $1}')
+drive_name=$(list_drives | sed -n "$((device_number + 1))p" | awk '{print $1}')
 
 if [ -z "$drive_name" ]; then
     echo "Perangkat tidak ditemukan. Harap pilih nomor perangkat yang benar."
