@@ -13,44 +13,25 @@ else
     done
 fi
 
-# Fungsi untuk mount partisi NTFS ke /mnt/external
-setup_drive() {
-    local partition=$1
-    local mount_point="/mnt/external"
-
-    # Mengecek apakah partisi sudah ter-mount, jika ya, unmount
-    mount | grep /dev/$partition > /dev/null
-    if [ $? -eq 0 ]; then
-        sudo umount /dev/$partition
-    fi
-
-    # Membuat direktori mount jika belum ada
-    sudo mkdir -p $mount_point
-
-    # Melakukan mount partisi NTFS
-    sudo mount -t ntfs-3g /dev/$partition $mount_point
-
-    # Menambahkan entri ke /etc/fstab untuk mount permanen
-    echo "/dev/$partition $mount_point ntfs-3g defaults 0 0" | sudo tee -a /etc/fstab
-}
-
 # Menggunakan partisi pertama yang ditemukan
 partition_to_use=${partitions[0]}
-echo "Menggunakan partisi /dev/$partition_to_use"
-setup_drive $partition_to_use
-echo "Partisi /dev/$partition_to_use telah di-mount ke /mnt/external dan entri telah ditambahkan ke /etc/fstab."
+mount_point=$(lsblk -o MOUNTPOINT | grep "/media/devmon")
 
-# Menampilkan kapasitas dari /mnt/external
-df -h /mnt/external
+if [ -z "$mount_point" ]; then
+    echo "Tidak ada mount point yang ditemukan untuk partisi /dev/$partition_to_use."
+    exit 1
+else
+    echo "Menggunakan partisi /dev/$partition_to_use yang ter-mount di $mount_point"
+fi
 
 # Update package list dan install dependencies
 sudo apt update
 sudo apt install -y netatalk avahi-daemon ntfs-3g
 
 # Membuat direktori Time Machine backup
-sudo mkdir -p /mnt/external/timemachine
-sudo chown -R $USER:$USER /mnt/external/timemachine
-sudo chmod -R 775 /mnt/external/timemachine
+sudo mkdir -p $mount_point/timemachine
+sudo chown -R $USER:$USER $mount_point/timemachine
+sudo chmod -R 775 $mount_point/timemachine
 
 # Konfigurasi Netatalk
 sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
@@ -58,7 +39,7 @@ sudo tee /etc/netatalk/afp.conf > /dev/null <<EOL
 log file = /var/log/netatalk.log
 
 [TimeMachine]
-path = /mnt/external/timemachine
+path = $mount_point/timemachine
 time machine = yes
 EOL
 
@@ -85,4 +66,4 @@ sudo systemctl restart netatalk
 sudo systemctl restart avahi-daemon
 
 echo "Setup Time Machine HomeServer selesai dengan sukses."
-echo "Direktori Time Machine ada di /mnt/external/timemachine"
+echo "Direktori Time Machine ada di $mount_point/timemachine"
